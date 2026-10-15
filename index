@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toto Match Picker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            blue: '#0052B4',
+                            lightBlue: '#00A8F0',
+                            darkBlue: '#002B66',
+                            gold: '#FFB800',
+                            lightBg: '#F0F4F9',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Smooth circle badge transitions */
+        .number-badge {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Custom glow ring for matching numbers */
+        .matched-glow {
+            box-shadow: 0 0 0 4px #FFB800, 0 8px 16px rgba(0, 43, 102, 0.35);
+        }
+
+        .active-btn-shadow {
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 4px 12px rgba(0, 82, 180, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-brand-lightBg text-slate-800 min-h-screen flex flex-col justify-between selection:bg-brand-lightBlue selection:text-white">
+
+    <!-- Header Section -->
+    <header class="w-full px-5 py-4 bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
+        <div class="max-w-md mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-blue to-brand-lightBlue flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-brand-blue/20">
+                    S
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-slate-900 leading-tight">Toto Match Picker</h1>
+                    <p class="text-[10px] uppercase font-semibold tracking-wider text-slate-400">Interactive Number Drawer</p>
+                </div>
+            </div>
+            <span id="match-status" class="text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-brand-blue border border-slate-200">
+                Mode: Random
+            </span>
+        </div>
+    </header>
+
+    <!-- Main Board Area -->
+    <main class="flex-1 max-w-md w-full mx-auto px-4 py-4 flex flex-col justify-start">
+
+        <!-- Stats Banner -->
+        <div class="mb-4 bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Custom Selected</p>
+                <p id="custom-count-text" class="text-base font-extrabold text-brand-blue mt-0.5">0 Numbers</p>
+            </div>
+            <div class="h-8 w-[1px] bg-slate-200"></div>
+            <div class="text-right">
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Drawn Matches</p>
+                <p id="drawn-matches-text" class="text-base font-extrabold text-brand-darkBlue mt-0.5">0 Overlaps</p>
+            </div>
+        </div>
+
+        <!-- Mode Instruction Bar -->
+        <div id="instruction-bar" class="mb-3 text-center text-xs font-medium text-slate-500 bg-blue-50/80 border border-blue-100 rounded-xl py-2 px-3">
+            Tap <b>Custom</b> to pick your own numbers, or tap <b>Match 2/3/4</b> to draw.
+        </div>
+
+        <!-- Grid of 1 to 49 Circular Badges -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-4 sm:p-5 shadow-sm">
+            <div id="grid-container" class="grid grid-cols-7 gap-2.5 sm:gap-3">
+                <!-- Javascript will inject 49 circular number badges here -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Control Center / Buttons Footer -->
+    <footer class="w-full bg-white border-t border-slate-200 p-4 sticky bottom-0 z-20 shadow-lg">
+        <div class="max-w-md mx-auto flex flex-col gap-3">
+            
+            <!-- Main Action Buttons Row -->
+            <div class="grid grid-cols-4 gap-2">
+                <!-- Custom Mode Button -->
+                <button id="btn-custom" onclick="setMode('custom')" class="mode-btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-1 rounded-xl text-xs sm:text-sm transition-all duration-200 border border-slate-200 flex flex-col items-center justify-center">
+                    <span>Custom</span>
+                </button>
+                <!-- Match 2 Button -->
+                <button id="btn-match-2" onclick="triggerMatch(2)" class="mode-btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-1 rounded-xl text-xs sm:text-sm transition-all duration-200 border border-slate-200 flex flex-col items-center justify-center">
+                    <span>Match 2</span>
+                </button>
+                <!-- Match 3 Button -->
+                <button id="btn-match-3" onclick="triggerMatch(3)" class="mode-btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-1 rounded-xl text-xs sm:text-sm transition-all duration-200 border border-slate-200 flex flex-col items-center justify-center">
+                    <span>Match 3</span>
+                </button>
+                <!-- Match 4 Button -->
+                <button id="btn-match-4" onclick="triggerMatch(4)" class="mode-btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-1 rounded-xl text-xs sm:text-sm transition-all duration-200 border border-slate-200 flex flex-col items-center justify-center">
+                    <span>Match 4</span>
+                </button>
+            </div>
+
+            <!-- Board Reset Button & Footer Credits -->
+            <div class="flex items-center justify-between pt-1">
+                <button id="btn-reset" onclick="resetBoard()" class="text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors flex items-center space-x-1.5 py-1 px-2 rounded-lg hover:bg-slate-100">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    <span>Clear All</span>
+                </button>
+                <div class="text-[11px] font-medium text-slate-400">
+                    Created by <span class="font-bold text-slate-600">Yons Lab</span>
+                </div>
+            </div>
+
+        </div>
+    </footer>
+
+    <!-- Custom Modal Dialog (Replaces native alert) -->
+    <div id="msg-box" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-xs w-full shadow-2xl text-center transform scale-95 transition-transform duration-300" id="msg-content">
+            <div id="msg-icon" class="w-12 h-12 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center mx-auto mb-3 text-xl font-bold">✨</div>
+            <h3 id="msg-title" class="text-base font-bold text-slate-900 mb-1">Notice</h3>
+            <p id="msg-text" class="text-xs text-slate-600 mb-5 leading-relaxed">Message description goes here.</p>
+            <button onclick="closeModal()" class="w-full bg-brand-blue hover:bg-brand-darkBlue active:scale-95 text-white font-semibold py-2.5 rounded-xl transition-all shadow-md shadow-brand-blue/20 text-xs">Got it</button>
+        </div>
+    </div>
+
+    <!-- Application Script Logic -->
+    <script>
+        const TOTAL_NUMBERS = 49;
+        let customNumbers = new Set();
+        let drawnNumbers = new Set();
+        let currentMode = 'none'; // 'custom', 'match-2', 'match-3', 'match-4'
+
+        window.onload = function() {
+            buildGrid();
+        };
+
+        // Render 1 through 49 circular badges
+        function buildGrid() {
+            const container = document.getElementById('grid-container');
+            container.innerHTML = '';
+
+            for (let i = 1; i <= TOTAL_NUMBERS; i++) {
+                const circle = document.createElement('button');
+                circle.id = `tile-${i}`;
+                circle.onclick = () => handleBadgeClick(i);
+                circle.className = 'number-badge aspect-square rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-sm sm:text-base flex items-center justify-center shadow-xs hover:bg-slate-200 active:scale-95 select-none';
+                circle.innerText = i;
+                container.appendChild(circle);
+            }
+        }
+
+        // Mode Switching & Active Button Highlight updates
+        function setMode(mode) {
+            currentMode = mode;
+            updateButtonStyles();
+
+            const statusText = document.getElementById('match-status');
+            const instructionText = document.getElementById('instruction-bar');
+
+            if (mode === 'custom') {
+                statusText.innerText = 'Mode: Custom Pick';
+                instructionText.innerHTML = 'Tap any circular badge on the grid to add/remove your custom numbers.';
+            } else if (mode.startsWith('match-')) {
+                const count = mode.split('-')[1];
+                statusText.innerText = `Mode: Match ${count}`;
+                instructionText.innerHTML = `Drew <b>${count}</b> random numbers. Overlapping custom numbers light up dark navy with a gold ring.`;
+            } else {
+                statusText.innerText = 'Mode: Idle';
+                instructionText.innerHTML = 'Tap <b>Custom</b> to select numbers, or tap a <b>Match</b> button to draw.';
+            }
+        }
+
+        // Apply active background/text colors on selected footer button
+        function updateButtonStyles() {
+            const buttons = {
+                'custom': document.getElementById('btn-custom'),
+                'match-2': document.getElementById('btn-match-2'),
+                'match-3': document.getElementById('btn-match-3'),
+                'match-4': document.getElementById('btn-match-4')
+            };
+
+            for (const [key, btn] of Object.entries(buttons)) {
+                if (!btn) continue;
+                if (key === currentMode) {
+                    // Active Button Style
+                    btn.className = 'mode-btn bg-brand-blue text-white font-extrabold py-3 px-1 rounded-xl text-xs sm:text-sm transition-all duration-200 border border-brand-blue shadow-md shadow-brand-blue/30 active-btn-shadow scale-105';
+                } else {
+                    // Inactive Button Style
+                    btn.className = 'mode-btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-1 rounded-xl text-xs sm:text-sm transition-all duration-200 border border-slate-200 flex flex-col items-center justify-center';
+                }
+            }
+        }
+
+        // Handle direct tap on number badge
+        function handleBadgeClick(num) {
+            if (currentMode !== 'custom') {
+                // Auto switch to custom mode on tap if not already
+                setMode('custom');
+            }
+
+            if (customNumbers.has(num)) {
+                customNumbers.delete(num);
+            } else {
+                customNumbers.add(num);
+            }
+
+            refreshBoardVisuals();
+        }
+
+        // Draw random N numbers for Match 2, Match 3, or Match 4
+        function triggerMatch(count) {
+            setMode(`match-${count}`);
+
+            // Random selection of N numbers from 1 to 49
+            drawnNumbers.clear();
+            while (drawnNumbers.size < count) {
+                const rand = Math.floor(Math.random() * TOTAL_NUMBERS) + 1;
+                drawnNumbers.add(rand);
+            }
+
+            refreshBoardVisuals();
+        }
+
+        // Re-calculate visual styles for all 49 badges
+        function refreshBoardVisuals() {
+            let overlapCount = 0;
+
+            for (let i = 1; i <= TOTAL_NUMBERS; i++) {
+                const tile = document.getElementById(`tile-${i}`);
+                if (!tile) continue;
+
+                const isCustom = customNumbers.has(i);
+                const isDrawn = drawnNumbers.has(i);
+                const isMatched = isCustom && isDrawn;
+
+                if (isMatched) overlapCount++;
+
+                // Reset base classes
+                tile.className = 'number-badge aspect-square rounded-full font-bold text-sm sm:text-base flex items-center justify-center select-none active:scale-95 ';
+
+                if (isMatched) {
+                    // Overlap: Darker Blue (#002B66) + Gold Ring Highlight + Scale Up
+                    tile.className += 'bg-brand-darkBlue text-white border-2 border-brand-gold matched-glow scale-110 z-10';
+                } else if (isDrawn) {
+                    // Standard Drawn Random Pick: Brand Blue / Sky Blue Gradient
+                    tile.className += 'bg-gradient-to-tr from-brand-blue to-brand-lightBlue text-white border-none shadow-md shadow-brand-blue/30 scale-105';
+                } else if (isCustom) {
+                    // Custom Choice Only: Light Sky Blue outline/fill
+                    tile.className += 'bg-sky-100 border-2 border-brand-lightBlue text-brand-darkBlue font-extrabold shadow-xs';
+                } else {
+                    // Default State
+                    tile.className += 'bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200';
+                }
+            }
+
+            // Update statistical counters
+            document.getElementById('custom-count-text').innerText = `${customNumbers.size} Numbers`;
+            document.getElementById('drawn-matches-text').innerText = `${overlapCount} Overlaps`;
+        }
+
+        // Reset state
+        function resetBoard() {
+            customNumbers.clear();
+            drawnNumbers.clear();
+            setMode('none');
+            refreshBoardVisuals();
+            document.getElementById('instruction-bar').innerHTML = 'Board reset successfully. Tap <b>Custom</b> or a <b>Match</b> button to begin.';
+        }
+
+        // Modal helper (replaces alert)
+        function showModal(title, text) {
+            document.getElementById('msg-title').innerText = title;
+            document.getElementById('msg-text').innerText = text;
+            const modal = document.getElementById('msg-box');
+            const content = document.getElementById('msg-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('msg-box');
+            const content = document.getElementById('msg-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+    </script>
+</body>
+</html>
